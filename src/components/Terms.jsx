@@ -38,33 +38,35 @@ export function Terms ({ onPickTerm }) {
 
   return (
     <div className='terms'>
-      {/* Removed internal <h2> to avoid double "Terms" header. The bold title now comes from App.jsx card__title. */}
-
       <div className='terms__controls'>
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder='Search terms…'
-          className='input'
+          placeholder='搜尋術語…'
+          className='terms__search'
         />
-        <button
-          onClick={() => setSearch('')}
-          className='btn btn--primary'
-        >
-          Clear
-        </button>
+        {search && (
+          <button
+            onClick={() => setSearch('')}
+            className='terms__clear'
+            aria-label='Clear search'
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       {loading && (
         <div className='terms__skeleton'>
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className='terms__skeleton-row' />
           ))}
         </div>
       )}
 
       {err && (
-        <div className='alert alert--error'>
+        <div className='terms__error'>
+          <span className='terms__error-icon'>⚠</span>
           {err}
         </div>
       )}
@@ -72,23 +74,29 @@ export function Terms ({ onPickTerm }) {
       {!loading && !err && (
         <div className='terms__list'>
           {filtered.length === 0 ? (
-            <div className='terms__empty'>No terms found</div>
+            <div className='terms__empty'>
+              <span className='terms__empty-icon'>🔍</span>
+              {search ? '找不到匹配的術語' : '載入中...'}
+            </div>
           ) : (
-            <ul className='terms__ul'>
-              {filtered.slice(0, 500).map((t, idx) => (
-                <li key={`${t}-${idx}`} className='terms__li'>
-                  <a
-  href="#"
-  className='terms__name'
-  title={t}
-  aria-label={`Add term ${t}`}
-  onClick={(e) => { e.preventDefault(); onPickTerm?.(t); }}
->
-  {t}
-</a>
-                </li>
-              ))}
-            </ul>
+            <>
+              <div className='terms__count'>{filtered.length} 個術語</div>
+              <ul className='terms__ul'>
+                {filtered.slice(0, 500).map((t, idx) => (
+                  <li key={`${t}-${idx}`} className='terms__li'>
+                    <button
+                      type='button'
+                      className='terms__term'
+                      title={t}
+                      aria-label={`加入術語 ${t}`}
+                      onClick={() => onPickTerm?.(t)}
+                    >
+                      {t}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </div>
       )}

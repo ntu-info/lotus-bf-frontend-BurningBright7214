@@ -62,59 +62,75 @@ export function Studies ({ query }) {
   const pageRows = sorted.slice((page - 1) * pageSize, page * pageSize)
 
   return (
-    <div className='flex flex-col rounded-2xl border'>
-      <div className='flex items-center justify-between p-3'>
-        <div className='card__title'>Studies</div>
-        <div className='text-sm text-gray-500'>
-           {/* {query ? `Query: ${query}` : 'Query: (empty)'} */}
-        </div>
+    <div className='studies'>
+      <div className='studies__header'>
+        <div className='card__title'>研究結果</div>
+        {query && (
+          <div className='studies__subtitle'>
+            共找到 <strong>{sorted.length}</strong> 項研究
+          </div>
+        )}
       </div>
 
 
       {query && loading && (
-        <div className='grid gap-3 p-3'>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className='h-10 animate-pulse rounded-lg bg-gray-100' />
+        <div className='studies__skeleton'>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className='studies__skeleton-row' />
           ))}
         </div>
       )}
 
       {query && err && (
-        <div className='mx-3 mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+        <div className='studies__error'>
+          <span className='studies__error-icon'>⚠</span>
           {err}
         </div>
       )}
 
       {query && !loading && !err && (
-        <div className='overflow-auto'>
-          <table className='min-w-full text-sm'>
-            <thead className='sticky top-0 bg-gray-50 text-left'>
+        <div className='studies__table-wrapper'>
+          <table className='studies__table'>
+            <thead className='studies__thead'>
               <tr>
                 {[
-                  { key: 'year', label: 'Year' },
-                  { key: 'journal', label: 'Journal' },
-                  { key: 'title', label: 'Title' },
-                  { key: 'authors', label: 'Authors' }
+                  { key: 'year', label: '年份' },
+                  { key: 'journal', label: '期刊' },
+                  { key: 'title', label: '標題' },
+                  { key: 'authors', label: '作者' }
                 ].map(({ key, label }) => (
-                  <th key={key} className='cursor-pointer px-3 py-2 font-semibold' onClick={() => changeSort(key)}>
-                    <span className='inline-flex items-center gap-2'>
+                  <th 
+                    key={key} 
+                    className={`studies__th ${sortKey === key ? 'studies__th--active' : ''}`}
+                    onClick={() => changeSort(key)}
+                  >
+                    <span className='studies__th-content'>
                       {label}
-                      <span className='text-xs text-gray-500'>{sortKey === key ? (sortDir === 'asc' ? '▲' : '▼') : ''}</span>
+                      {sortKey === key && (
+                        <span className='studies__sort-icon'>{sortDir === 'asc' ? '▲' : '▼'}</span>
+                      )}
                     </span>
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody className='studies__tbody'>
               {pageRows.length === 0 ? (
-                <tr><td colSpan={4} className='px-3 py-4 text-gray-500'>No data</td></tr>
+                <tr>
+                  <td colSpan={4} className='studies__empty-cell'>
+                    <span className='studies__empty-icon'>📄</span>
+                    無資料
+                  </td>
+                </tr>
               ) : (
                 pageRows.map((r, i) => (
-                  <tr key={i} className={classNames(i % 2 ? 'bg-white' : 'bg-gray-50')}>
-                    <td className='whitespace-nowrap px-3 py-2 align-top'>{r.year ?? ''}</td>
-                    <td className='px-3 py-2 align-top'>{r.journal || ''}</td>
-                    <td className='max-w-[540px] px-3 py-2 align-top'><div className='truncate' title={r.title}>{r.title || ''}</div></td>
-                    <td className='px-3 py-2 align-top'>{r.authors || ''}</td>
+                  <tr key={i} className={`studies__row ${i % 2 === 0 ? 'studies__row--even' : ''}`}>
+                    <td className='studies__cell studies__cell--year'>{r.year ?? ''}</td>
+                    <td className='studies__cell studies__cell--journal'>{r.journal || ''}</td>
+                    <td className='studies__cell studies__cell--title'>
+                      <div className='studies__title-text' title={r.title}>{r.title || ''}</div>
+                    </td>
+                    <td className='studies__cell studies__cell--authors'>{r.authors || ''}</td>
                   </tr>
                 ))
               )}
@@ -123,14 +139,42 @@ export function Studies ({ query }) {
         </div>
       )}
 
-      {query && !loading && !err && (
-        <div className='flex items-center justify-between border-t p-3 text-sm'>
-          <div>Total <b>{sorted.length}</b> records, page <b>{page}</b>/<b>{totalPages}</b></div>
-          <div className='flex items-center gap-2'>
-            <button disabled={page <= 1} onClick={() => setPage(1)} className='rounded-lg border px-2 py-1 disabled:opacity-40'>⏮</button>
-            <button disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))} className='rounded-lg border px-2 py-1 disabled:opacity-40'>Previous</button>
-            <button disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))} className='rounded-lg border px-2 py-1 disabled:opacity-40'>Next</button>
-            <button disabled={page >= totalPages} onClick={() => setPage(totalPages)} className='rounded-lg border px-2 py-1 disabled:opacity-40'>⏭</button>
+      {query && !loading && !err && sorted.length > 0 && (
+        <div className='studies__pagination'>
+          <div className='studies__pagination-info'>
+            共 <strong>{sorted.length}</strong> 筆，第 <strong>{page}</strong> / <strong>{totalPages}</strong> 頁
+          </div>
+          <div className='studies__pagination-controls'>
+            <button 
+              disabled={page <= 1} 
+              onClick={() => setPage(1)} 
+              className='studies__pagination-btn'
+              aria-label='第一頁'
+            >
+              ⏮
+            </button>
+            <button 
+              disabled={page <= 1} 
+              onClick={() => setPage(p => Math.max(1, p - 1))} 
+              className='studies__pagination-btn'
+            >
+              上一頁
+            </button>
+            <button 
+              disabled={page >= totalPages} 
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
+              className='studies__pagination-btn'
+            >
+              下一頁
+            </button>
+            <button 
+              disabled={page >= totalPages} 
+              onClick={() => setPage(totalPages)} 
+              className='studies__pagination-btn'
+              aria-label='最後一頁'
+            >
+              ⏭
+            </button>
           </div>
         </div>
       )}

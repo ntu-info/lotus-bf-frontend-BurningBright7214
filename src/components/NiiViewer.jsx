@@ -389,59 +389,75 @@ const coord2idx = (c_mm, n, axis) => {
 
   // slice configs (labels only; numbers removed)
   const sliceConfigs = [
-    { key: 'y', name: 'Coronal',  axisLabel: 'Y', index: iy, setIndex: setIy, max: Math.max(0, ny-1), canvasRef: canvases[1] },
-    { key: 'x', name: 'Sagittal', axisLabel: 'X', index: ix, setIndex: setIx, max: Math.max(0, nx-1), canvasRef: canvases[2] },
-    { key: 'z', name: 'Axial',    axisLabel: 'Z', index: iz, setIndex: setIz, max: Math.max(0, nz-1), canvasRef: canvases[0] },
+    { key: 'y', name: '冠狀切面',  axisLabel: 'Y', index: iy, setIndex: setIy, max: Math.max(0, ny-1), canvasRef: canvases[1] },
+    { key: 'x', name: '矢狀切面', axisLabel: 'X', index: ix, setIndex: setIx, max: Math.max(0, nx-1), canvasRef: canvases[2] },
+    { key: 'z', name: '軸狀切面',    axisLabel: 'Z', index: iz, setIndex: setIz, max: Math.max(0, nz-1), canvasRef: canvases[0] },
   ]
 
-  // shared small input styles to mimic Neurosynth (compact bordered boxes)
-  const nsInputCls = 'w-16 rounded border border-gray-400 px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400'
-  const nsLabelCls = 'mr-1 text-sm'
-
   return (
-    <div className='flex flex-col gap-3'>
-      <div className='flex items-center justify-between'>
-        <div className='card__title'>NIfTI Viewer</div>
-        <div className='flex items-center gap-2 text-sm text-gray-500'>
-          {query && <a href={mapUrl} className='rounded-lg border px-2 py-1 text-xs hover:bg-gray-50'>Download map</a>}
-        </div>
+    <div className='nii-viewer'>
+      <div className='nii-viewer__header'>
+        <div className='card__title'>腦影像檢視器</div>
+        {query && (
+          <a href={mapUrl} className='nii-viewer__download' download>
+            <span>⬇</span>
+            下載影像
+          </a>
+        )}
       </div>
 
-      {/* --- Threshold mode & value --- */}
-      <div className='rounded-xl border p-3 text-sm'>
-        <label className='flex items-center gap-2'>
-          <span>Threshold mode</span>
-          <select value={thrMode} onChange={e=>setThrMode(e.target.value)} className='rounded-lg border px-2 py-1'>
-            <option value='value'>Value</option>
-            <option value='pctl'>Percentile</option>
-          </select>
-        </label>
-        <br />
-        {thrMode === 'value' ? (
-          <>
-            <label className='flex items-center gap-2'>
-              <span>Threshold</span>
-              <input type='number' step='0.01' value={thrValue} onChange={e=>setThrValue(Number(e.target.value))} className='w-28 rounded-lg border px-2 py-1' />
+      {/* Controls Section */}
+      <div className='nii-viewer__controls'>
+        {/* Threshold Controls */}
+        <div className='nii-viewer__control-group'>
+          <label className='nii-viewer__label'>
+            <span>閾值模式</span>
+            <select 
+              value={thrMode} 
+              onChange={e=>setThrMode(e.target.value)} 
+              className='nii-viewer__select'
+            >
+              <option value='value'>數值</option>
+              <option value='pctl'>百分位</option>
+            </select>
+          </label>
+          
+          {thrMode === 'value' ? (
+            <label className='nii-viewer__label'>
+              <span>閾值</span>
+              <input 
+                type='number' 
+                step='0.01' 
+                value={thrValue} 
+                onChange={e=>setThrValue(Number(e.target.value))} 
+                className='nii-viewer__input'
+              />
             </label>
-            <br />
-          </>
-        ) : (
-          <>
-            <label className='flex items-center gap-2'>
-              <span>Percentile</span>
-              <input type='number' min={50} max={99.9} step={0.5} value={pctl} onChange={e=>setPctl(Number(e.target.value)||95)} className='w-24 rounded-lg border px-2 py-1' />
+          ) : (
+            <label className='nii-viewer__label'>
+              <span>百分位 (%)</span>
+              <input 
+                type='number' 
+                min={50} 
+                max={99.9} 
+                step={0.5} 
+                value={pctl} 
+                onChange={e=>setPctl(Number(e.target.value)||95)} 
+                className='nii-viewer__input'
+              />
             </label>
-            <br />
-          </>
-        )}
+          )}
+        </div>
 
-        {/* Neurosynth-style coordinate inputs (signed, centered at 0) */}
-        <div className='mt-1 flex items-center gap-4'>
-          <label className='flex items-center'>
-            <span className={nsLabelCls}>X (mm):</span>
+        {/* Coordinate Inputs */}
+        <div className='nii-viewer__coord-group'>
+          <label className='nii-viewer__coord-label'>
+            <span>X (mm):</span>
             <input
-              type='text' inputMode='decimal' pattern='-?[0-9]*([.][0-9]+)?'
-              className={nsInputCls}
+              type='text'
+              inputMode='decimal'
+              pattern='-?[0-9]*([.][0-9]+)?'
+              className='nii-viewer__coord-input'
               value={cx}
               onChange={e=>setCx(e.target.value)}
               onBlur={()=>commitCoord('x')}
@@ -449,11 +465,13 @@ const coord2idx = (c_mm, n, axis) => {
               aria-label='X coordinate (centered)'
             />
           </label>
-          <label className='flex items-center'>
-            <span className={nsLabelCls}>Y (mm):</span>
+          <label className='nii-viewer__coord-label'>
+            <span>Y (mm):</span>
             <input
-              type='text' inputMode='decimal' pattern='-?[0-9]*([.][0-9]+)?'
-              className={nsInputCls}
+              type='text'
+              inputMode='decimal'
+              pattern='-?[0-9]*([.][0-9]+)?'
+              className='nii-viewer__coord-input'
               value={cy}
               onChange={e=>setCy(e.target.value)}
               onBlur={()=>commitCoord('y')}
@@ -461,11 +479,13 @@ const coord2idx = (c_mm, n, axis) => {
               aria-label='Y coordinate (centered)'
             />
           </label>
-          <label className='flex items-center'>
-            <span className={nsLabelCls}>Z (mm):</span>
+          <label className='nii-viewer__coord-label'>
+            <span>Z (mm):</span>
             <input
-              type='text' inputMode='decimal' pattern='-?[0-9]*([.][0-9]+)?'
-              className={nsInputCls}
+              type='text'
+              inputMode='decimal'
+              pattern='-?[0-9]*([.][0-9]+)?'
+              className='nii-viewer__coord-input'
               value={cz}
               onChange={e=>setCz(e.target.value)}
               onBlur={()=>commitCoord('z')}
@@ -474,52 +494,70 @@ const coord2idx = (c_mm, n, axis) => {
             />
           </label>
         </div>
+
+        {/* Advanced Controls */}
+        <div className='nii-viewer__control-group'>
+          <label className='nii-viewer__label'>
+            <span>高斯 FWHM (mm)</span>
+            <input 
+              type='number' 
+              step='0.5' 
+              value={fwhm} 
+              onChange={e=>setFwhm(Number(e.target.value)||0)} 
+              className='nii-viewer__input'
+            />
+          </label>
+          
+          <label className='nii-viewer__label nii-viewer__label--slider'>
+            <span>重疊透明度: {Math.round(overlayAlpha * 100)}%</span>
+            <input 
+              type='range' 
+              min={0} 
+              max={1} 
+              step={0.05} 
+              value={overlayAlpha} 
+              onChange={e=>setOverlayAlpha(Number(e.target.value))} 
+              className='nii-viewer__slider'
+            />
+          </label>
+        </div>
       </div>
 
-      {/* --- Brain views --- */}
+      {/* Brain Views */}
       {(loadingBG || loadingMap) && (
-        <div className='grid gap-3 lg:grid-cols-3'>
+        <div className='nii-viewer__skeleton'>
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className='h-64 animate-pulse rounded-xl border bg-gray-100' />
+            <div key={i} className='nii-viewer__skeleton-item' />
           ))}
         </div>
       )}
+      
       {(errBG || errMap) && (
-        <div className='rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800'>
-          {errBG && <div>Background: {errBG}</div>}
-          {errMap && <div>Map: {errMap}</div>}
+        <div className='nii-viewer__error'>
+          <span className='nii-viewer__error-icon'>⚠</span>
+          {errBG && <div>背景影像：{errBG}</div>}
+          {errMap && <div>重疊影像：{errMap}</div>}
         </div>
       )}
 
       {!!nx && (
-        <div className='grid grid-cols-3 gap-3' style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
+        <div className='nii-viewer__canvas-grid'>
           {sliceConfigs.map(({ key, name, axisLabel, index, setIndex, max, canvasRef }) => (
-            <div key={key} className='flex flex-col gap-2'>
-              <div className='text-xs text-gray-600'>{name} ({axisLabel})</div>
-              <div className='flex items-center gap-2'>
-                <canvas ref={canvasRef} className='h-64 w-full rounded-xl border' onClick={(e)=>onCanvasClick(e, key)} style={{ cursor: 'crosshair' }} />
+            <div key={key} className='nii-viewer__slice'>
+              <div className='nii-viewer__slice-label'>
+                {name} <span className='nii-viewer__slice-axis'>({axisLabel})</span>
+              </div>
+              <div className='nii-viewer__canvas-wrapper'>
+                <canvas 
+                  ref={canvasRef} 
+                  className='nii-viewer__canvas' 
+                  onClick={(e)=>onCanvasClick(e, key)} 
+                />
               </div>
             </div>
           ))}
         </div>
       )}
-
-      {/* map generation params */}
-      <div className='rounded-xl border p-3 text-sm'>
-        <label className='flex flex-col'>Gaussian FWHM:
-          <input type='number' step='0.5' value={fwhm} onChange={e=>setFwhm(Number(e.target.value)||0)} className='w-28 rounded-lg border px-2 py-1'/>
-          <br />
-        </label>
-      </div>
-
-      {/* overlay controls */}
-      <div className='rounded-xl border p-3 text-sm'>
-        <label className='flex items-center gap-2'>
-          <span>Overlay alpha</span>
-          <input type='range' min={0} max={1} step={0.05} value={overlayAlpha} onChange={e=>setOverlayAlpha(Number(e.target.value))} className='w-40' />
-        </label>
-        <br />
-      </div>
     </div>
   )
 }

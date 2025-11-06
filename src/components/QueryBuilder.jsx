@@ -8,49 +8,60 @@ export function QueryBuilder({ query, setQuery }) {
     }
   };
 
+  const operators = [
+    { label: 'AND', onClick: () => append('AND'), type: 'logic' },
+    { label: 'OR', onClick: () => append('OR'), type: 'logic' },
+    { label: 'NOT', onClick: () => append('NOT'), type: 'logic' },
+    { label: '(', onClick: () => append('('), type: 'bracket' },
+    { label: ')', onClick: () => append(')'), type: 'bracket' },
+    { label: 'Reset', onClick: () => setQuery(''), type: 'action' },
+  ];
+
   return (
-    <div className="flex flex-col gap-3 qb">
-      {/* Header */}
-      <div className="flex items-center">
-        <div className="card__title">Query Builder</div>
+    <div className="qb">
+      <div className="qb__header">
+        <div className="card__title">查詢建立器</div>
       </div>
 
-      {/* Input */}
-      <input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder="Create a query here, e.g.: [-22,-4,18] NOT emotion"
-        className="qb__input w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring"
-       style={{ width: "100%" }}/>
-
-      {/* Operators + Reset (single row) */}
-      <div className="flex gap-2 flex-nowrap overflow-x-auto">
-        {[
-          { label: 'AND', onClick: () => append('AND') },
-          { label: 'OR', onClick: () => append('OR') },
-          { label: 'NOT', onClick: () => append('NOT') },
-          { label: '(', onClick: () => append('(') },
-          { label: ')', onClick: () => append(')') },
-          // Reset moved here after ')' per requirement
-          { label: 'Reset', onClick: () => setQuery('') },
-        ].map((b) => (
+      <div className="qb__input-wrapper">
+        <input
+          value={query || ''}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="建立查詢，例如：[-22,-4,18] NOT emotion"
+          className="qb__input"
+        />
+        {query && (
           <button
-            key={b.label}
-            onClick={b.onClick}
-            className="rounded-xl border px-3 py-2 text-sm hover:bg-gray-50"
+            className="qb__clear"
+            onClick={() => setQuery('')}
+            aria-label="清除查詢"
+            title="清除查詢"
           >
-            {b.label}
+            ✕
+          </button>
+        )}
+      </div>
+
+      <div className="qb__toolbar">
+        {operators.map((op) => (
+          <button
+            key={op.label}
+            onClick={op.onClick}
+            className={`qb__op qb__op--${op.type}`}
+            title={`加入 ${op.label}`}
+          >
+            {op.label}
           </button>
         ))}
       </div>
 
-      {/* Tip (English) */}
-      {/*<div className="text-xs text-gray-600">
-        Tip: You can mix MNI locations in the query string, such as "[-22,-4,-18] NOT emotion" (without the quotes).
-      </div>*/}
-
-      {/* The "Current Query" row was removed per requirement #3. */}
+      {query && (
+        <div className="qb__preview">
+          <span className="qb__preview-label">目前查詢：</span>
+          <code className="qb__preview-code">{query}</code>
+        </div>
+      )}
     </div>
   );
 }
